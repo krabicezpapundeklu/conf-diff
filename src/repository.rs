@@ -1,12 +1,14 @@
-use anyhow::{Context, Result};
-use dotenvy::var;
+use anyhow::Result;
 use oracle::RowValue;
 
-use crate::model::{ConfigPoint, SystemProperty};
+use crate::{
+    model::{ConfigPoint, SystemProperty},
+    utils::get_var,
+};
 
 struct ConnectionImpl(oracle::Connection);
 
-pub trait Repository {
+pub trait Repository: Clone + Send + Sync {
     type Connection;
 
     fn get_config_points(
@@ -21,7 +23,10 @@ pub trait Repository {
         environment_name: &str,
     ) -> Result<Self::Connection>;
 
-    fn get_environment_names(&self) -> Result<Vec<String>>;
+    fn get_environment_names(
+        &self,
+        controller_connection: &Self::Connection,
+    ) -> Result<Vec<String>>;
 
     fn get_system_properties(
         &self,
@@ -30,6 +35,7 @@ pub trait Repository {
     ) -> Result<Vec<SystemProperty>>;
 }
 
+#[derive(Clone)]
 struct RepositoryImpl {
     controller_connection_string: String,
     controller_schema: String,
@@ -122,9 +128,10 @@ impl Repository for RepositoryImpl {
         Ok(ConnectionImpl(connection))
     }
 
-    fn get_environment_names(&self) -> Result<Vec<String>> {
-        let controller_connection = self.get_controller_connection()?;
-
+    fn get_environment_names(
+        &self,
+        controller_connection: &Self::Connection,
+    ) -> Result<Vec<String>> {
         let rows = controller_connection.0.query_as::<String>(
             "SELECT s.system_name
             FROM system s
@@ -168,10 +175,6 @@ impl Repository for RepositoryImpl {
 
         Ok(system_properties)
     }
-}
-
-fn get_var(key: &str) -> Result<String> {
-    var(key).context(format!("{key} is not set"))
 }
 
 pub fn new_repository() -> Result<impl Repository> {

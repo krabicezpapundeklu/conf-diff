@@ -1,8 +1,9 @@
 use std::cmp::Ordering;
 
 use anyhow::Result;
+use serde::Serialize;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct ConfigPoint {
     pub name: String,
     pub value: Option<String>,
@@ -21,7 +22,7 @@ impl KeyOrd for ConfigPoint {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Diff<T>
 where
     T: KeyOrd + PartialEq,
@@ -30,8 +31,22 @@ where
     pub right_item: Option<T>,
 }
 
+impl<T> Diff<T>
+where
+    T: KeyOrd + PartialEq,
+{
+    pub fn item(&self) -> &T {
+        if let Some(left) = &self.left_item {
+            left
+        } else {
+            self.right_item.as_ref().unwrap()
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct EnvironmentConfigDiffs {
+    pub environment_names: Vec<String>,
     pub config_point_diffs: Result<Vec<Diff<ConfigPoint>>>,
     pub system_property_diffs: Result<Vec<Diff<SystemProperty>>>,
 }
@@ -40,7 +55,7 @@ pub trait KeyOrd {
     fn compare_key(&self, other: &Self) -> Ordering;
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct SystemProperty {
     pub name: String,
     pub value: Option<String>,

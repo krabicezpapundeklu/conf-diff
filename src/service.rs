@@ -115,7 +115,7 @@ where
     }
 }
 
-pub trait Service {
+pub trait Service: Clone + Send + Sync {
     fn get_environment_config_diffs(
         &self,
         left_environment_name: &str,
@@ -125,6 +125,7 @@ pub trait Service {
     fn get_environment_names(&self) -> Result<Vec<String>>;
 }
 
+#[derive(Clone)]
 struct ServiceImpl<R>
 where
     R: Repository,
@@ -144,6 +145,9 @@ where
         let controller_connection = self.repository.get_controller_connection()?;
 
         Ok(EnvironmentConfigDiffs {
+            environment_names: self
+                .repository
+                .get_environment_names(&controller_connection)?,
             config_point_diffs: self.get_config_point_diffs(
                 &controller_connection,
                 left_environment_name,
@@ -158,7 +162,10 @@ where
     }
 
     fn get_environment_names(&self) -> Result<Vec<String>> {
-        self.repository.get_environment_names()
+        let controller_connection = self.repository.get_controller_connection()?;
+
+        self.repository
+            .get_environment_names(&controller_connection)
     }
 }
 
