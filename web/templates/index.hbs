@@ -49,7 +49,7 @@
                             Are environments running?
                         </div>
                     {{else}}
-                        {{#if config_point_differences}}
+                        {{#if config_point_diffs}}
                             <div class="table-container">
                                 <table class="table table-bordered table-sm">
                                     <thead>
@@ -61,7 +61,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{#each config_point_differences}}
+                                        {{#each config_point_diffs}}
                                             <tr>
                                                 <td>{{this.name}}</td>
                                                 <td>{{this.organization}}</td>
@@ -86,7 +86,7 @@
                             <p>{{system_properties_error}}</p>
                         </div>
                     {{else}}
-                        {{#if system_property_differences}}
+                        {{#if system_property_diffs}}
                             <div class="table-container">
                                 <table class="table table-bordered table-sm">
                                     <thead>
@@ -97,7 +97,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{#each system_property_differences}}
+                                        {{#each system_property_diffs}}
                                             <tr>
                                                 <td>{{this.name}}</td>
                                                 <td>{{> value this.left_environment_system_property}}</td>

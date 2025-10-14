@@ -22,7 +22,7 @@ use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
 
 use crate::{
-    model::{ConfigPoint, SystemProperty},
+    model::{ConfigPoint, Diff, SystemProperty},
     service::Service,
     utils::get_var,
 };
@@ -81,10 +81,62 @@ impl IntoResponse for AppError {
     }
 }
 
+#[derive(Serialize)]
+struct ConfigPointDiff {
+    name: String,
+    organization: Option<String>,
+    left_environment_config_point: Option<ConfigPoint>,
+    right_environment_config_point: Option<ConfigPoint>,
+}
+
+impl From<Diff<ConfigPoint>> for ConfigPointDiff {
+    fn from(value: Diff<ConfigPoint>) -> Self {
+        let item = value.item();
+
+        Self {
+            name: item.name.clone(),
+            organization: item.organization.clone(),
+            left_environment_config_point: value.left_item,
+            right_environment_config_point: value.right_item,
+        }
+    }
+}
+
 #[derive(Deserialize)]
 struct IndexInput {
     left: Option<String>,
     right: Option<String>,
+}
+
+#[derive(Serialize)]
+struct IndexOutput {
+    selected_left_environment: Option<String>,
+    selected_right_environment: Option<String>,
+    environment_names: Vec<String>,
+    controller_error: Option<String>,
+    config_point_diffs: Vec<ConfigPointDiff>,
+    config_points_error: Option<String>,
+    system_property_diffs: Vec<SystemPropertyDiff>,
+    system_properties_error: Option<String>,
+}
+
+#[derive(Serialize)]
+struct SystemPropertyDiff {
+    name: String,
+    left_environment_system_property: Option<SystemProperty>,
+    right_environment_system_property: Option<SystemProperty>,
+}
+
+impl From<Diff<SystemProperty>> for SystemPropertyDiff {
+    fn from(value: Diff<SystemProperty>) -> Self {
+        let item = value.item();
+
+        Self {
+            name: item.name.clone(),
+            left_environment_system_property: value.left_item,
+            right_environment_system_property: value.right_item,
+        }
+    }
 }
 
 async fn get_asset(uri: Uri) -> Response {
@@ -136,41 +188,14 @@ async fn get_index<S>(
 where
     S: Service,
 {
-    #[derive(Serialize)]
-    struct ConfigPointDifference {
-        name: String,
-        organization: Option<String>,
-        left_environment_config_point: Option<ConfigPoint>,
-        right_environment_config_point: Option<ConfigPoint>,
-    }
-
-    #[derive(Serialize)]
-    struct Model {
-        selected_left_environment: Option<String>,
-        selected_right_environment: Option<String>,
-        environment_names: Vec<String>,
-        controller_error: Option<String>,
-        config_point_differences: Vec<ConfigPointDifference>,
-        config_points_error: Option<String>,
-        system_property_differences: Vec<SystemPropertyDifference>,
-        system_properties_error: Option<String>,
-    }
-
-    #[derive(Serialize)]
-    struct SystemPropertyDifference {
-        name: String,
-        left_environment_system_property: Option<SystemProperty>,
-        right_environment_system_property: Option<SystemProperty>,
-    }
-
-    let mut model = Model {
+    let mut output = IndexOutput {
         selected_left_environment: None,
         selected_right_environment: None,
         environment_names: Vec::new(),
         controller_error: None,
-        config_point_differences: Vec::new(),
+        config_point_diffs: Vec::new(),
         config_points_error: None,
-        system_property_differences: Vec::new(),
+        system_property_diffs: Vec::new(),
         system_properties_error: None,
     };
 
@@ -182,52 +207,37 @@ where
             .get_environment_config_diffs(left_environment_name, right_environment_name)
         {
             Ok(environment_config_diffs) => {
-                model.environment_names = environment_config_diffs.environment_names;
+                output.environment_names = environment_config_diffs.environment_names;
 
                 match environment_config_diffs.config_point_diffs {
-                    Ok(config_point_differences) => {
-                        for config_point_difference in config_point_differences {
-                            model.config_point_differences.push(ConfigPointDifference {
-                                name: config_point_difference.item().name.clone(),
-                                organization: config_point_difference.item().organization.clone(),
-                                left_environment_config_point: config_point_difference.left_item,
-                                right_environment_config_point: config_point_difference.right_item,
-                            });
-                        }
+                    Ok(config_point_diffs) => {
+                        output.config_point_diffs =
+                            config_point_diffs.into_iter().map(Into::into).collect();
                     }
-                    Err(error) => model.config_points_error = Some(error.to_string()),
+                    Err(error) => output.config_points_error = Some(error.to_string()),
                 }
 
                 match environment_config_diffs.system_property_diffs {
-                    Ok(system_property_differences) => {
-                        for system_property_difference in system_property_differences {
-                            model
-                                .system_property_differences
-                                .push(SystemPropertyDifference {
-                                    name: system_property_difference.item().name.clone(),
-                                    left_environment_system_property: system_property_difference
-                                        .left_item,
-                                    right_environment_system_property: system_property_difference
-                                        .right_item,
-                                });
-                        }
+                    Ok(system_property_diffs) => {
+                        output.system_property_diffs =
+                            system_property_diffs.into_iter().map(Into::into).collect();
                     }
-                    Err(error) => model.config_points_error = Some(error.to_string()),
+                    Err(error) => output.config_points_error = Some(error.to_string()),
                 }
             }
-            Err(error) => model.controller_error = Some(error.to_string()),
+            Err(error) => output.controller_error = Some(error.to_string()),
         }
     } else {
         match app_context.service.get_environment_names() {
-            Ok(environment_names) => model.environment_names = environment_names,
-            Err(error) => model.controller_error = Some(error.to_string()),
+            Ok(environment_names) => output.environment_names = environment_names,
+            Err(error) => output.controller_error = Some(error.to_string()),
         }
     }
 
-    model.selected_left_environment = query.left;
-    model.selected_right_environment = query.right;
+    output.selected_left_environment = query.left;
+    output.selected_right_environment = query.right;
 
-    Ok(Html(app_context.handlebars.render("index", &model)?))
+    Ok(Html(app_context.handlebars.render("index", &output)?))
 }
 
 pub async fn start<S>(service: S) -> Result<()>
