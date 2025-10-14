@@ -1,164 +1,121 @@
 <!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="utf-8" />
-    <title>CONF-DIFF</title>
-    <link rel="icon" href="./favicon.png" />
-    <link href="./app.css?{{> VERSION }}" rel="stylesheet" />
-    <meta name="description" content="Configuration Diff" />
-    <meta name="viewport" content="width=device-width" />
-</head>
-
-<body>
-    <nav class="navbar">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="https://github.com/krabicezpapundeklu/conf-diff">
-                <h1 class="fs-5 d-inline">CONF-DIFF</h1>
-            </a>
-            <span class="navbar-text">{{> VERSION }}</span>
-        </div>
-    </nav>
-    <div class="container mt-3">
-        {{#if controller_error}}
-            <div class="alert alert-danger" role="alert">
-                Cannot connect to Controller:
-                <p>{{controller_error}}</p>
+    <head>
+        <meta charset="utf-8" />
+        <title>CONF-DIFF</title>
+        <link rel="icon" href="./favicon.png" />
+        <link href="./app.css?{{> VERSION }}" rel="stylesheet" />
+        <meta name="description" content="Configuration Diff" />
+        <meta name="viewport" content="width=device-width" />
+    </head>
+    <body>
+        <nav class="navbar">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="https://github.com/krabicezpapundeklu/conf-diff">
+                    <h1 class="fs-5 d-inline">CONF-DIFF</h1>
+                </a>
+                <span class="navbar-text">{{> VERSION }}</span>
             </div>
-        {{else}}
-            <form class="row g-3">
-                <div class="col-6">
-                    <label for="left" class="form-label">First Environment</label>
-                    {{> select id="left" list=environment_names selected=selected_left_environment }}
+        </nav>
+        <div class="container mt-3">
+            {{#if controller_error}}
+                <div class="alert alert-danger" role="alert">
+                    Cannot connect to Controller:
+                    <p>{{controller_error}}</p>
                 </div>
-                <div class="col-6">
-                    <label for="right" class="form-label">Second Environment</label>
-                    {{> select id="right" list=environment_names selected=selected_right_environment }}
-                </div>
-                <div class="text-center">
-                    <button type="submit" class="btn btn-primary">Compare</button>
-                </div>
-            </form>
-
-            {{#if (and selected_left_environment selected_right_environment)}}
-                <hr/>
-
-                <h4 class="text-center">Config-Point Differences</h4>
-                {{#if config_points_error}}
-                    <div class="alert alert-danger" role="alert">
-                        Cannot get config-point differences:
-                        <p>{{config_points_error}}</p>
-                        Are environments running?
+            {{else}}
+                <form class="row g-3">
+                    <div class="col-6">
+                        <label for="left" class="form-label">First Environment</label>
+                        {{> select id="left" list=environment_names selected=selected_left_environment }}
                     </div>
-                {{else}}
-                    {{#if config_point_differences}}
-                        <div class="table-container">
-                            <table class="table table-bordered table-sm">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Name</th>
-                                        <th scope="col">Organization</th>
-                                        <th scope="col">{{selected_left_environment}}</th>
-                                        <th scope="col">{{selected_right_environment}}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {{#each config_point_differences}}
-                                        <tr>
-                                            <td>{{this.name}}</td>
-                                            <td>{{this.organization}}</td>
-                                            <td>
-                                                {{#if this.left_environment_config_point}}
-                                                    {{#if this.left_environment_config_point.value}}
-                                                        {{this.left_environment_config_point.value}}
-                                                    {{else}}
-                                                        <i>null</i>
-                                                    {{/if}}
-                                                {{else}}
-                                                    <i>missing</i>
-                                                {{/if}}
-                                            </td>
-                                            <td>
-                                                {{#if this.right_environment_config_point}}
-                                                    {{#if this.right_environment_config_point.value}}
-                                                        {{this.right_environment_config_point.value}}
-                                                    {{else}}
-                                                        <i>null</i>
-                                                    {{/if}}
-                                                {{else}}
-                                                    <i>missing</i>
-                                                {{/if}}
-                                            </td>
-                                        </tr>
-                                    {{/each}}
-                                </tbody>
-                            </table>
+                    <div class="col-6">
+                        <label for="right" class="form-label">Second Environment</label>
+                        {{> select id="right" list=environment_names selected=selected_right_environment }}
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Compare</button>
+                    </div>
+                </form>
+
+                {{#if (and selected_left_environment selected_right_environment)}}
+                    <hr/>
+
+                    <h4 class="text-center">Config-Point Differences</h4>
+                    {{#if config_points_error}}
+                        <div class="alert alert-danger" role="alert">
+                            Cannot get config-point differences:
+                            <p>{{config_points_error}}</p>
+                            Are environments running?
                         </div>
                     {{else}}
-                        <div class="alert alert-success" role="alert">
-                            There are no differences.
-                        </div>
+                        {{#if config_point_differences}}
+                            <div class="table-container">
+                                <table class="table table-bordered table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Name</th>
+                                            <th scope="col">Organization</th>
+                                            <th scope="col">{{selected_left_environment}}</th>
+                                            <th scope="col">{{selected_right_environment}}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{#each config_point_differences}}
+                                            <tr>
+                                                <td>{{this.name}}</td>
+                                                <td>{{this.organization}}</td>
+                                                <td>{{> value this.left_environment_config_point}}</td>
+                                                <td>{{> value this.right_environment_config_point}}</td>
+                                            </tr>
+                                        {{/each}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {{else}}
+                            <div class="alert alert-success" role="alert">
+                                There are no differences.
+                            </div>
+                        {{/if}}
                     {{/if}}
-                {{/if}}
 
-                <h4 class="text-center">System-Property Differences</h4>
-                {{#if system_properties_error}}
-                    <div class="alert alert-danger" role="alert">
-                        Cannot get system-property differences:
-                        <p>{{system_properties_error}}</p>
-                    </div>
-                {{else}}
-                    {{#if system_property_differences}}
-                        <div class="table-container">
-                            <table class="table table-bordered table-sm">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Name</th>
-                                        <th scope="col">{{selected_left_environment}}</th>
-                                        <th scope="col">{{selected_right_environment}}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {{#each system_property_differences}}
-                                        <tr>
-                                            <td>{{this.name}}</td>
-                                            <td>
-                                                {{#if this.left_environment_system_property}}
-                                                    {{#if this.left_environment_system_property.value}}
-                                                        {{this.left_environment_system_property.value}}
-                                                    {{else}}
-                                                        <i>null</i>
-                                                    {{/if}}
-                                                {{else}}
-                                                    <i>missing</i>
-                                                {{/if}}
-                                            </td>
-                                            <td>
-                                                {{#if this.right_environment_system_property}}
-                                                    {{#if this.right_environment_system_property.value}}
-                                                        {{this.right_environment_system_property.value}}
-                                                    {{else}}
-                                                        <i>null</i>
-                                                    {{/if}}
-                                                {{else}}
-                                                    <i>missing</i>
-                                                {{/if}}
-                                            </td>
-                                        </tr>
-                                    {{/each}}
-                                </tbody>
-                            </table>
+                    <h4 class="text-center">System-Property Differences</h4>
+                    {{#if system_properties_error}}
+                        <div class="alert alert-danger" role="alert">
+                            Cannot get system-property differences:
+                            <p>{{system_properties_error}}</p>
                         </div>
                     {{else}}
-                        <div class="alert alert-success" role="alert">
-                            There are no differences.
-                        </div>
+                        {{#if system_property_differences}}
+                            <div class="table-container">
+                                <table class="table table-bordered table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Name</th>
+                                            <th scope="col">{{selected_left_environment}}</th>
+                                            <th scope="col">{{selected_right_environment}}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{#each system_property_differences}}
+                                            <tr>
+                                                <td>{{this.name}}</td>
+                                                <td>{{> value this.left_environment_system_property}}</td>
+                                                <td>{{> value this.right_environment_system_property}}</td>
+                                            </tr>
+                                        {{/each}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {{else}}
+                            <div class="alert alert-success" role="alert">
+                                There are no differences.
+                            </div>
+                        {{/if}}
                     {{/if}}
                 {{/if}}
             {{/if}}
-        {{/if}}
-    </div>
-    <script src="./app.js?{{> VERSION }}"></script>
-</body>
-
+        </div>
+        <script src="./app.js?{{> VERSION }}"></script>
+    </body>
 </html>
