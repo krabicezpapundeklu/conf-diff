@@ -29,21 +29,11 @@
             <form class="row g-3">
                 <div class="col-6">
                     <label for="left" class="form-label">First Environment</label>
-                    <select id="left" name="left" class="form-select">
-                        <option value="">-- Please Select --</option>
-                        {{#each environment_names}}
-                            <option value="{{this}}"{{#if (eq this ../selected_left_environment)}} selected{{/if}}>{{this}}</option>
-                        {{/each}}
-                    </select>
+                    {{> select id="left" list=environment_names selected=selected_left_environment }}
                 </div>
                 <div class="col-6">
                     <label for="right" class="form-label">Second Environment</label>
-                    <select id="right" name="right" class="form-select">
-                        <option value="">-- Please Select --</option>
-                        {{#each environment_names}}
-                            <option value="{{this}}"{{#if (eq this ../selected_right_environment)}} selected{{/if}}>{{this}}</option>
-                        {{/each}}
-                    </select>
+                    {{> select id="right" list=environment_names selected=selected_right_environment }}
                 </div>
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary">Compare</button>

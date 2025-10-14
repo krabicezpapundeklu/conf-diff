@@ -1,0 +1,6 @@
+<select id="{{id}}" name="{{id}}" class="form-select">
+    <option value="">-- Please Select --</option>
+    {{#each list}}
+        <option value="{{this}}"{{#if (eq this ../selected)}} selected{{/if}}>{{this}}</option>
+    {{/each}}
+</select>
