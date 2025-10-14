@@ -22,7 +22,7 @@ use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
 
 use crate::{
-    model::{ConfigPoint, Diff, SystemProperty},
+    model::{ConfigPoint, SystemProperty},
     service::Service,
     utils::get_var,
 };

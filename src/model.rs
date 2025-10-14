@@ -36,11 +36,10 @@ where
     T: KeyOrd + PartialEq,
 {
     pub fn item(&self) -> &T {
-        if let Some(left) = &self.left_item {
-            left
-        } else {
-            self.right_item.as_ref().unwrap()
-        }
+        self.left_item
+            .as_ref()
+            .or(self.right_item.as_ref())
+            .expect("no item")
     }
 }
 
