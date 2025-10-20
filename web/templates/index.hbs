@@ -41,9 +41,12 @@
                 {{#if (and selected_left_environment selected_right_environment)}}
                     <hr/>
 
-                    <h4 class="text-center">Config-Point Differences</h4>
+                    <div class="align-items-baseline d-flex">
+                        <h2 class="flex-fill h4"><a id="config-point-diffs">Config-Point Differences</a></h4>
+                        <a href="#system-property-diffs">Go to System-Property Differences</a>
+                    </div>
                     {{#if config_points_error}}
-                        <div class="alert alert-danger" role="alert">
+                        <div class="alert alert-danger mb-0" role="alert">
                             Cannot get config-point differences:
                             <p>{{config_points_error}}</p>
                             Are environments running?
@@ -71,13 +74,16 @@
                                 </tbody>
                             </table>
                         {{else}}
-                            <div class="alert alert-success" role="alert">
+                            <div class="alert alert-success mb-0" role="alert">
                                 There are no differences.
                             </div>
                         {{/if}}
                     {{/if}}
 
-                    <h4 class="text-center">System-Property Differences</h4>
+                    <div class="align-items-baseline d-flex mt-4">
+                        <h2 class="flex-fill h4"><a id="system-property-diffs">System-Property Differences</a></h4>
+                        <a href="#config-point-diffs">Go to Config-Point Differences</a>
+                    </div>
                     {{#if system_properties_error}}
                         <div class="alert alert-danger" role="alert">
                             Cannot get system-property differences:
